@@ -1,0 +1,7 @@
+# Zenith Panel Runtime Artifacts & Logs
+zenith-diagnostic.txt
+zenith-security-report.txt
+*.log
+*.tar.gz
+*.pid
+.config/
