@@ -28,6 +28,18 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - Listagem de plugins/APIs reflete as 16 integrações.
 - Documentação atualizada (README, ARCHITECTURE, PLUGINS, USAGE).
 
+### Correções (validadas no CI Linux + Windows × Python 3.12/3.13)
+
+- **Windows 11**: saída UTF-8 segura (`ensure_utf8_stdout`) — o banner/menus
+  com `╔═╗` causavam `UnicodeEncodeError` em consoles cp1252/cp437.
+- **Windows**: chamadas DPAPI (`CredReadW`/`CredWriteW`/`CredDeleteW`) com
+  `argtypes`/`restype` corretos.
+- **Testes**: chaves de API nunca são gravadas no Credential Manager real
+  durante a suíte (`backend=file`); teste de `NOT CONFIGURED` usa store vazio
+  determinístico (o CI Windows pegava credenciais vazadas entre testes).
+- **Build**: `pyproject.toml` com `[build-system]` e pacotes explícitos
+  (o `python -m build` falhava com flat-layout); console script `nexus`.
+
 ## [1.0.0] — 2026-09-01
 
 ### Adicionado

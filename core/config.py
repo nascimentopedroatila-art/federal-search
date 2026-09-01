@@ -21,7 +21,7 @@ from core.constants import CONFIG_DIR, CONFIG_PATH, PERFORMANCE_PRESETS
 from core.errors import ConfigurationError
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "performance_preset": "BALANCED",
     "max_concurrent_requests": 5,
     "request_timeout": 15.0,
