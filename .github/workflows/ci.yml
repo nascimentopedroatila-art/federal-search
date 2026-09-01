@@ -27,12 +27,20 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Run tests
         run: pytest -v --junitxml=junit.xml
-      - name: Upload junit on failure
+      - name: Emit failure annotation from junit
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-${{ matrix.os }}-${{ matrix.python-version }}
-          path: junit.xml
+        shell: bash
+        run: |
+          python - <<'EOF'
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('junit.xml')
+          for tc in tree.iter('testcase'):
+              for kind in ('failure', 'error'):
+                  el = tc.find(kind)
+                  if el is not None:
+                      msg = (el.get('message') or '')[:600].replace('%', '%25').replace('\r', ' ').replace('\n', ' | ')
+                      print(f"::error::FAILED {tc.get('classname')}::{tc.get('name')} - {msg}")
+          EOF
 
   lint:
     name: Lint (ruff)
