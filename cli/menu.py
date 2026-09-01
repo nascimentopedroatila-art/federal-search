@@ -80,11 +80,11 @@ def _ask_target() -> str | None:
     return target
 
 
-def _run_scan_interactive(target: str, forced_type: str | None = None) -> None:
+def _run_scan_interactive(target_value: str, forced_type: str | None = None) -> None:
     from cli.commands import _cmd_scan
 
     class _Args:
-        target = target
+        target = target_value
         target_type = forced_type
         plugins = None
         json = False
@@ -119,11 +119,11 @@ def _menu_network() -> None:
     print("  2. Testar conectividade com host externo (ex.: 1.1.1.1)")
     choice = input("Opção: ").strip()
     if choice == "2":
-        host = input("Host: ").strip() or "1.1.1.1"
+        host_value = input("Host: ").strip() or "1.1.1.1"
         from cli.commands import _cmd_diag
 
         class _Args:
-            host = host
+            host = host_value
             json = False
 
         from cli.main import run_async

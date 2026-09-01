@@ -131,6 +131,26 @@ def test_export_unknown_scan() -> None:
     assert code == 1
 
 
+def test_menu_exit_option(capsys, monkeypatch) -> None:
+    """Menu interativo: opção 0 encerra limpo."""
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    from cli.menu import run_menu
+
+    assert run_menu() == 0
+
+
+def test_menu_osint_phone_scan(capsys, monkeypatch) -> None:
+    """Menu interativo: OSINT + telefone executa um scan offline."""
+    answers = iter(["1", "+5585999999999", "0"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(answers))
+    from cli.menu import run_menu
+
+    assert run_menu() == 0
+    output = capsys.readouterr().out
+    assert "Phone Validator" in output
+    assert "Scan ID" in output
+
+
 def test_keys_set_delete_flow(tmp_path, capsys, monkeypatch) -> None:
     from core.secret_store import SecretStore
 
