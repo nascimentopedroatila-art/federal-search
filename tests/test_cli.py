@@ -181,6 +181,21 @@ def test_ensure_utf8_stdout_prevents_unicode_crash(monkeypatch) -> None:
     assert fake.encoding.lower() == "utf-8"
 
 
+def test_cli_scan_works_with_cp1252_stdout(monkeypatch) -> None:
+    """Caminho real do CLI (cli.main.main) não pode quebrar com stdout cp1252."""
+    import io
+    import sys
+
+    fake = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict")
+    monkeypatch.setattr(sys, "stdout", fake)
+    code = run_cli(["scan", "--target", "+5585999999999", "--no-db"])
+    assert code == 0
+    fake.flush()
+    output = fake.buffer.getvalue().decode("utf-8", errors="replace")
+    assert "Scan ID" in output
+    assert "Phone Validator" in output
+
+
 def test_keys_set_delete_flow(tmp_path, capsys, monkeypatch) -> None:
     from core.secret_store import SecretStore
 

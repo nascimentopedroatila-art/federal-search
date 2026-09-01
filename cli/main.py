@@ -94,6 +94,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Ponto de entrada do CLI."""
+    from cli.output import ensure_utf8_stdout
+
+    ensure_utf8_stdout()  # evita UnicodeEncodeError no Windows (cp1252/cp437)
     from cli.commands import run_command
 
     parser = build_parser()
