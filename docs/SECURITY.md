@@ -1,28 +1,59 @@
-# Segurança Defensiva e Hardening - Módulo 12
+# Segurança
 
-O módulo **SEGURANÇA DEFENSIVA (`12`)** do ZENITH PANEL é composto por utilitários e auditorias de sistema desenvolvidos estritamente para propósitos de conformidade, endurecimento (*hardening*) e diagnóstico do próprio dispositivo ou laboratório autorizado.
+## Modelo de ameaças
 
----
+O NEXUS processa:
 
-## 🔐 Conformidade e Políticas do Projeto
-O **ZENITH PANEL** **NÃO** inclui, distribui ou encoraja funcionalidades para:
-- Roubo ou captura ilegal de credenciais e senhas.
-- Invasão de contas ou phishing.
-- Instalação de malware ou ocultação de processos maliciosos.
-- Bypass de autenticação em redes ou exploração de sistemas de terceiros.
-- Execução de ataques de negação de serviço (DDoS).
+- alvos informados pelo usuário (domínios, IPs, e-mails, telefones, hashes);
+- respostas de APIs públicas;
+- API keys do usuário.
 
-Todas as ferramentas de rede (`04`), auditorias (`12`) e testes (`13`) têm como escopo exclusivo:
-- **O seu próprio dispositivo** (Termux / Android / PC).
-- **O seu próprio servidor local ou laboratório**.
-- **Sistemas onde você detém autorização explícita de auditoria**.
+Os controles abaixo protegem esses ativos.
 
----
+## Proteção de API keys
 
-## 🛠️ Auditorias Disponíveis no Módulo 12
-1. **Auditoria de Permissões Críticas**: Localiza arquivos com permissão aberta `777` no diretório HOME e verifica permissões de chaves SSH em `~/.ssh/` (garantindo o uso seguro de `chmod 600`).
-2. **Hashes SHA-256 e Integridade**: Confirma a integridade de arquivos vitais de configuração (`zenith.conf`, `ai.conf`, `.bashrc`).
-3. **Auditoria de Processos Ativos**: Identifica os processos com maior consumo de recursos de memória e CPU.
-4. **Auditoria de Portas e Serviços**: Exibe portas TCP em escuta e serviços ativos.
-5. **Detecção de Configurações Inseguras**: Analisa variáveis vulneráveis (ex: `PATH` contendo `.`, histórico exposto, etc.).
-6. **Gerador de Relatório Formal**: Consegue exportar o diagnóstico de segurança estruturado para o arquivo `zenith-security-report.txt`.
+| Camada | Mecanismo |
+|---|---|
+| Armazenamento preferencial | Windows Credential Manager (DPAPI) via `ctypes` |
+| Portátil | variáveis de ambiente |
+| Dev somente | `.env` / `config/api_keys.json` (permissões 600, gitignored) |
+| Logs | redação automática (`api_key=`, `token=`, `secret=`, `Bearer ...`) |
+| Git | `.env`, `config/api_keys.json`, `data/`, `logs/` no `.gitignore` |
+
+Nunca:
+
+- armazenar chaves no código-fonte;
+- imprimir chaves no terminal ou logs;
+- commitá-las.
+
+## Limites de execução
+
+- `max_concurrent_requests` (semáforo);
+- `request_timeout` por requisição e `timeout` por plugin;
+- `retry_count` com exponential backoff;
+- `rate_limit_per_second` global e por plugin;
+- `MAX_RESULTS_PER_PLUGIN` (500) e `max_results_per_plugin` da config;
+- `MAX_HTTP_RESPONSE_BYTES` (5 MB) e `MAX_TARGET_LENGTH` (4096);
+- sem consultas infinitas — sempre há limite de duração.
+
+## Regra de confiança
+
+- `CONFIRMED` — verificação determinística;
+- `HIGH` — fonte primária observada;
+- `MEDIUM` — inferência;
+- `LOW` — ambíguo.
+
+O NEXUS **nunca** apresenta informação incerta como fato e **sempre** mostra a
+fonte de cada resultado.
+
+## Não-funcionalidades (proibido)
+
+- invasão de contas / quebra de senhas / credential stuffing;
+- bypass de CAPTCHA ou autenticação;
+- exploração automática contra terceiros;
+- acesso a bases privadas / dados vazados;
+- malware, persistência, exfiltração, ocultação de atividade.
+
+## Reportando vulnerabilidades
+
+Veja [SECURITY.md](../SECURITY.md) na raiz.

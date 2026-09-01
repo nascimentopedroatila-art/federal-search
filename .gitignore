@@ -1,7 +1,55 @@
-# Zenith Panel Runtime Artifacts & Logs
-zenith-diagnostic.txt
-zenith-security-report.txt
-*.log
+# =============================================================
+# NEXUS - Modular Intelligence Toolkit
+# .gitignore
+# =============================================================
+
+# --- Python ---------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+.venv/
+venv/
+env/
+
+# --- Test / lint caches ----------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Segredos (NUNCA commitar) ----------------------------------
+.env
+config/config.json
+config/api_keys.json
+*.pem
+*.key
+
+# --- Dados de runtime do NEXUS ----------------------------------
+data/
+logs/
+reports/out/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+.nexus/
+
+# --- Artefatos antigos (projeto anterior) -----------------------
+zenith-*
 *.tar.gz
 *.pid
 .config/
+
+# --- Editores / SO ----------------------------------------------
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+.venv-test/

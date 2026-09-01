@@ -1,39 +1,125 @@
-# Guia de Uso Geral - ZENITH PANEL
+# Uso (referência de comandos)
 
-O **ZENITH PANEL** é um mega toolkit interativo para terminal que centraliza 23 módulos operacionais em uma interface limpa, colorida e navegável numéricamente.
+## Scan
 
----
-
-## 🎨 Interface do Painel
-
-A tela principal exibe o banner ASCII futurista e um menu em caixa padronizada com 23 opções numeradas (`01` a `23`) e a opção de saída (`0`).
-
-```
-╔══════════════════════════════════════════════╗
-║          Z E N I T H   P A N E L             ║
-║            ULTIMATE TERMUX TOOLKIT           ║
-╠══════════════════════════════════════════════╣
-║ 01 │ 🖥️  SISTEMA                             ║
-║ 02 │ 📊  MONITOR                             ║
-...
-║  0 │ 🚪  SAIR                                ║
-╚══════════════════════════════════════════════╝
+```bash
+python nexus.py scan --target <alvo>
 ```
 
-### Navegação nos Submenus
-1. Para acessar qualquer módulo, digite o número correspondente (ex: `1`, `01`, `14`, etc.) e pressione `ENTER`.
-2. Em cada submenu, você terá opções numeradas de funcionalidades ou a opção `0` para retornar ao menu anterior sem perder as suas configurações ou sessão.
-3. Mensagens do painel seguem cores semânticas padronizadas:
-   - `[✓] Operação concluída` (Verde - Sucesso)
-   - `[!] Aviso` (Amarelo - Atenção ou fallback de recurso não disponível)
-   - `[×] Erro` (Vermelho - Erro ou arquivo inexistente)
-   - `[•] Informação` (Azul - Informação geral)
-   - `[>] Executando` (Ciano - Processo em andamento)
+O tipo é detectado automaticamente:
 
----
+| Exemplo de alvo | Tipo detectado |
+|---|---|
+| `+5585999999999` | `phone` |
+| `user@example.com` | `email` |
+| `example.com` | `domain` |
+| `8.8.8.8` | `ip` |
+| `https://example.com` | `url` |
+| `d41d8cd98f00b204e9800998ecf8427e` | `hash` |
+| `example_username` | `username` |
 
-## ⚡ Recursos Principais por Área
-- **Monitoramento e Hardware (`01`, `02`, `03`)**: Acompanhe o consumo de CPU, RAM, disco e bateria em tempo real no Android ou Linux.
-- **Redes e Servidores (`04`, `10`, `13`)**: Teste conectividade, ping, portas de hosts autorizados e cadastre servidores locais.
-- **Automação e Ferramentas (`07`, `09`, `14`)**: Gerencie arquivos com confirmação explícita em exclusões e rode agendamentos.
-- **Desenvolvimento (`05`, `06`, `08`, `20`)**: Utilize a IA (OpenAI, Groq, Ollama), gerencie Git e adicione plugins na pasta `plugins/`.
+### Opções do scan
+
+| Opção | Descrição |
+|---|---|
+| `--type <tipo>` | força o tipo (`phone`, `email`, `username`, `domain`, `ip`, `url`, `hash`) — sempre respeitado |
+| `--plugins <a,b>` | executa apenas os plugins listados |
+| `--json` | saída JSON pura (sem tabela nem logs no stdout) |
+| `--no-db` | não grava o scan no banco |
+| `--max-concurrent N` | override da concorrência |
+| `--timeout N` | override do timeout de requisição (segundos) |
+
+## Menu interativo
+
+```bash
+python nexus.py menu
+```
+
+```text
+╔══════════════════════════════════════════╗
+║             M E N U   P R I N C I P A L  ║
+╠══════════════════════════════════════════╣
+║  1. OSINT                                ║
+║  2. Network                              ║
+║  3. DNS                                  ║
+║  4. Hash Analysis                        ║
+║  5. API Manager                          ║
+║  6. Reports                              ║
+║  7. Plugins                              ║
+║  8. Configuration                        ║
+║  9. System Diagnostics                   ║
+║  0. Exit                                 ║
+╚══════════════════════════════════════════╝
+```
+
+## Plugins
+
+```bash
+python nexus.py plugins                    # todos
+python nexus.py plugins --type domain      # filtro por tipo
+```
+
+## API Manager
+
+```bash
+python nexus.py apis
+python nexus.py apis --json
+```
+
+## Histórico
+
+```bash
+python nexus.py history
+python nexus.py history --limit 50
+```
+
+## Relatórios
+
+```bash
+python nexus.py export --scan <SCAN_ID> --format json
+python nexus.py export --scan <SCAN_ID> --format csv
+python nexus.py export --scan <SCAN_ID> --format html
+python nexus.py export --scan <SCAN_ID> --format txt
+python nexus.py export --scan <SCAN_ID> --format html -o meu_relatorio.html
+```
+
+O `<SCAN_ID>` aceita prefixo (ex.: `28d80fa17ad1` → `28d80f`).
+
+## API keys (seguras)
+
+```bash
+python nexus.py keys list
+python nexus.py keys set ABUSEIPDB_API_KEY          # prompt sem eco
+python nexus.py keys set ABUSEIPDB_API_KEY --value "..."
+python nexus.py keys set ABUSEIPDB_API_KEY --backend file   # apenas dev
+python nexus.py keys delete VIRUSTOTAL_API_KEY
+```
+
+## Configuração
+
+```bash
+python nexus.py config --show
+python nexus.py config --preset LOW|BALANCED|PERFORMANCE|CUSTOM
+python nexus.py config --set cache_ttl 43200
+python nexus.py config --set logging_level DEBUG
+```
+
+## Diagnóstico
+
+```bash
+python nexus.py diag                      # sistema + rede local
+python nexus.py diag --host 1.1.1.1       # + latência/DNS/conectividade
+python nexus.py diag --json
+```
+
+## Auto-verificação
+
+```bash
+python nexus.py selfcheck
+```
+
+## Status possíveis de plugins/resultados
+
+`SUCCESS` · `NO_RESULTS` · `SKIPPED` · `RATE_LIMITED` · `TIMEOUT` · `ERROR` · `NOT_CONFIGURED`
+
+Se uma fonte não estiver disponível → `NOT AVAILABLE`. Se não houver resultado → `NO RESULTS`.

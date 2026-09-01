@@ -1,55 +1,91 @@
-# Guia de Instalação do ZENITH PANEL
+# Instalação
 
-O **ZENITH PANEL** foi projetado para funcionar nativamente no **Termux (Android)** e em sistemas **Linux padrão** (Debian, Ubuntu, Arch, Alpine, etc.) sem exigir privilégios de root.
+## Windows 11 (prioridade)
 
----
+Pré-requisito: **Python 3.12+** instalado de https://www.python.org/downloads/
+(marque **"Add Python to PATH"** durante a instalação).
 
-## 🚀 Instalação Rápida
+### Opção A — via git
 
-Para instalar e configurar o painel no seu dispositivo, clone o repositório ou acesse a pasta e execute o script instalador:
-
-```bash
-# Clone o projeto caso ainda não tenha clonado
+```powershell
 git clone https://github.com/nascimentopedroatila-art/federal-search.git
 cd federal-search
-
-# Conceda permissão e execute o instalador
-chmod +x install.sh
-bash install.sh
+.\scripts\install.ps1
 ```
 
-### O que o instalador (`install.sh`) faz:
-1. Detecta o ambiente operacional (Termux ou Linux Genérico).
-2. Verifica dependências necessárias (`curl`, `wget`, `git`, `python`, `termux-api`).
-3. Cria a estrutura de configuração em `~/.config/zenith/`.
-4. Instala os arquivos e cria o comando global `zenith` acessível de qualquer diretório.
-5. Testa a instalação e apresenta a caixa ASCII de sucesso.
+O `install.ps1`:
 
----
+1. verifica a versão do Python;
+2. cria o ambiente virtual `.venv`;
+3. instala as dependências (`requirements.txt`);
+4. cria `config\config.json` a partir do exemplo;
+5. executa `python nexus.py selfcheck`.
 
-## 🖥️ Executando o Painel
+### Opção B — sem git (ZIP)
 
-Após a instalação, basta digitar no seu terminal:
+1. Baixe o ZIP do repositório e extraia.
+2. Abra o PowerShell dentro da pasta extraída.
+3. Execute `.\scripts\install.ps1`.
+
+### Iniciar
+
+```powershell
+.\scripts\start.ps1            # menu interativo
+.\scripts\start.ps1 scan --target example.com
+```
+
+ou o atalho:
+
+```bat
+NEXUS.bat
+NEXUS.bat scan --target 8.8.8.8
+```
+
+> Se a execução de scripts do PowerShell estiver bloqueada, execute uma vez:
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+## Linux / macOS
 
 ```bash
-zenith
+git clone https://github.com/nascimentopedroatila-art/federal-search.git
+cd federal-search
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python nexus.py selfcheck
 ```
 
-Ou executar com argumentos rápidos:
+## Termux (Android)
 
 ```bash
-zenith --version     # Exibe a versão do Zenith Panel
-zenith --diagnostic  # Gera relatório de diagnóstico do sistema
-zenith --help        # Mostra opções da interface de linha de comando
+pkg install python git
+git clone https://github.com/nascimentopedroatila-art/federal-search.git
+cd federal-search
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python nexus.py selfcheck
 ```
 
----
+> Em Termux, os comandos de diagnóstico de rede dependem de permissões do
+> Android; o restante funciona normalmente.
 
-## 📦 Dependências Suportadas
+## Atualização
 
-O **ZENITH PANEL** detecta e utiliza automaticamente as seguintes ferramentas operacionais opcionais ou recomendadas:
-- `git`: Controle de versão e atualização (Módulo 08).
-- `curl` / `wget`: Testes de rede, IA e requisições HTTP (Módulos 04, 06, 13).
-- `python3` / `bc`: Calculadora e processamento JSON (Módulos 07, 13).
-- `termux-api`: Integração com bateria, vibração, torch e toast no Android (Módulo 03).
-- `proot-distro`: Gerenciamento de distribuições Linux dentro do Termux (Módulo 05).
+```powershell
+.\scripts\update.ps1    # Windows
+```
+
+ou manualmente:
+
+```bash
+git pull
+pip install -r requirements.txt
+```
+
+## Verificação
+
+```bash
+python nexus.py selfcheck
+python nexus.py plugins
+python nexus.py --version
+```
