@@ -1,0 +1,15 @@
+# NEXUS - Modular Intelligence Toolkit
+# Dependências de runtime (Python 3.12+)
+#
+# httpx        -> cliente HTTP assíncrono (engine de consulta)
+# dnspython    -> consultas DNS (MX, NS, TXT, SPF, DMARC, PTR...)
+# phonenumbers -> validação/normalização de números de telefone (dados públicos offline)
+# psutil       -> diagnóstico local (interfaces, memória, CPU)
+#
+# Nota: o núcleo do NEXUS não depende de nenhuma API externa.
+# Estas bibliotecas são utilitárias e 100% offline.
+
+httpx>=0.27,<1.0
+dnspython>=2.6,<3.0
+phonenumbers>=8.13,<9.0
+psutil>=5.9,<7.0

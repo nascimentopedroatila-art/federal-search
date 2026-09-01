@@ -1,0 +1,9 @@
+{
+  "//": "NEXUS - api_keys.example.json",
+  "//2": "APENAS desenvolvimento local. Prefira o Windows Credential Manager:",
+  "//3": "    python nexus.py keys set ABUSEIPDB_API_KEY",
+  "//4": "ou variáveis de ambiente. Este arquivo nunca deve ser commitado.",
+  "ABUSEIPDB_API_KEY": "",
+  "VIRUSTOTAL_API_KEY": "",
+  "EMAILREP_API_KEY": ""
+}

@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexus-osint"
+version = "2.0.0"
+description = "NEXUS - Modular Intelligence Toolkit (OSINT legítimo, análise de infraestrutura pública e diagnóstico de rede)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "NEXUS Project" }]
+keywords = ["osint", "dns", "network", "recon", "security", "cli", "plugins"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Networking",
+]
+
+[project.urls]
+Homepage = "https://github.com/nascimentopedroatila-art/federal-search"
+Repository = "https://github.com/nascimentopedroatila-art/federal-search"
+Documentation = "https://github.com/nascimentopedroatila-art/federal-search/tree/main/docs"
+
+[project.scripts]
+nexus = "cli.main:main"
+
+[tool.setuptools]
+py-modules = ["nexus"]
+packages = [
+    "core",
+    "cli",
+    "database",
+    "reports",
+    "plugins",
+    "plugins.phone",
+    "plugins.email",
+    "plugins.username",
+    "plugins.domain",
+    "plugins.ip",
+    "plugins.dns",
+    "plugins.hash",
+    "plugins.network",
+    "plugins.url",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["core", "cli", "plugins", "database", "reports", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

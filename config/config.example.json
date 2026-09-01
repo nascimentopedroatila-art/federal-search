@@ -1,0 +1,19 @@
+{
+  "//": "NEXUS - config.example.json",
+  "//2": "Copie para config/config.json (ou execute o NEXUS uma vez; ele cria o arquivo).",
+  "version": "2.0.0",
+  "performance_preset": "BALANCED",
+  "max_concurrent_requests": 5,
+  "request_timeout": 15.0,
+  "retry_count": 2,
+  "rate_limit_per_second": 5.0,
+  "cache_enabled": true,
+  "cache_ttl": 86400,
+  "max_cache_size": 10000,
+  "output_format": "json",
+  "logging_level": "INFO",
+  "save_to_database": true,
+  "show_sources": true,
+  "max_results_per_plugin": 250,
+  "default_scan_timeout_seconds": 300
+}
