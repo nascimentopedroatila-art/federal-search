@@ -22,6 +22,9 @@ if str(_ROOT) not in sys.path:
 
 def main() -> int:
     """Delega para o CLI principal."""
+    from cli.output import ensure_utf8_stdout
+
+    ensure_utf8_stdout()  # evita UnicodeEncodeError no Windows (cp1252/cp437)
     from cli.main import main as cli_main
 
     return cli_main()

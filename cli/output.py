@@ -21,6 +21,20 @@ _COLORS = {
 _ENABLED = sys.stdout.isatty() and sys.platform != "win32" or sys.stdout.isatty()
 
 
+def ensure_utf8_stdout() -> None:
+    """Garante saída UTF-8 segura (crítico no Windows 11, cp1252/cp437).
+
+    ``errors="replace"`` evita UnicodeEncodeError com caracteres como
+    ``╔═╗`` em consoles legados; o Windows Terminal exibe corretamente.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            if stream and hasattr(stream, "reconfigure"):
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
+
+
 def colorize(text: str, color: str = "reset") -> str:
     """Aplica cor ANSI se o terminal suportar."""
     if not _ENABLED or color not in _COLORS:

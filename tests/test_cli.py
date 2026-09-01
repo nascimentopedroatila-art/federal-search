@@ -166,6 +166,21 @@ def test_menu_osint_phone_scan(capsys, monkeypatch) -> None:
     assert "Scan ID" in output
 
 
+def test_ensure_utf8_stdout_prevents_unicode_crash(monkeypatch) -> None:
+    """Windows (cp1252) não pode imprimir ╔═╗ — ensure_utf8_stdout deve evitar o crash."""
+    import io
+    import sys
+
+    from cli.output import banner, ensure_utf8_stdout
+
+    fake = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict")
+    monkeypatch.setattr(sys, "stdout", fake)
+    ensure_utf8_stdout()
+    # Imprimir o banner não pode levantar UnicodeEncodeError
+    print(banner())
+    assert fake.encoding.lower() == "utf-8"
+
+
 def test_keys_set_delete_flow(tmp_path, capsys, monkeypatch) -> None:
     from core.secret_store import SecretStore
 
