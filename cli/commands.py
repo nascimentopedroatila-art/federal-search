@@ -48,6 +48,19 @@ def run_command(args: Any) -> int:
 # scan
 # ---------------------------------------------------------------------------
 def _cmd_scan(args: Any, run_async) -> int:
+
+    from core.logger import set_console_level
+
+    if args.json:
+        set_console_level("ERROR")  # mantém a saída JSON limpa (inclui descoberta de plugins)
+    try:
+        return _cmd_scan_impl(args, run_async)
+    finally:
+        if args.json:
+            set_console_level("INFO")
+
+
+def _cmd_scan_impl(args: Any, run_async) -> int:
     from cli.output import banner, colorize, print_json, render_table, status_color
     from core.engine import Engine
 
@@ -58,23 +71,14 @@ def _cmd_scan(args: Any, run_async) -> int:
         timeout=args.timeout,
     )
     context: dict[str, Any] = {"save_to_database": not args.no_db}
-
-    from core.logger import set_console_level
-
-    if args.json:
-        set_console_level("ERROR")  # mantém a saída JSON limpa
-    try:
-        result = run_async(
-            engine.run_scan(
-                args.target,
-                target_type=args.target_type,
-                plugin_names=plugin_filter,
-                context=context,
-            )
+    result = run_async(
+        engine.run_scan(
+            args.target,
+            target_type=args.target_type,
+            plugin_names=plugin_filter,
+            context=context,
         )
-    finally:
-        if args.json:
-            set_console_level("INFO")
+    )
 
     if args.json:
         print_json(result.to_dict())
