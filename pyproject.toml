@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "nexus-osint"
 version = "2.0.0"
@@ -24,6 +28,28 @@ classifiers = [
 Homepage = "https://github.com/nascimentopedroatila-art/federal-search"
 Repository = "https://github.com/nascimentopedroatila-art/federal-search"
 Documentation = "https://github.com/nascimentopedroatila-art/federal-search/tree/main/docs"
+
+[project.scripts]
+nexus = "cli.main:main"
+
+[tool.setuptools]
+py-modules = ["nexus"]
+packages = [
+    "core",
+    "cli",
+    "database",
+    "reports",
+    "plugins",
+    "plugins.phone",
+    "plugins.email",
+    "plugins.username",
+    "plugins.domain",
+    "plugins.ip",
+    "plugins.dns",
+    "plugins.hash",
+    "plugins.network",
+    "plugins.url",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
