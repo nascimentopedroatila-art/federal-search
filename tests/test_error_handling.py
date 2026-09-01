@@ -63,7 +63,8 @@ def test_secret_store_empty_value_raises(tmp_path) -> None:
 
 def test_secret_store_roundtrip_and_redaction(tmp_path) -> None:
     store = SecretStore(keys_path=tmp_path / "keys.json")
-    store.set("ABUSEIPDB_API_KEY", "valor-super-secreto")
+    # backend=file: nunca tocar no Credential Manager real em testes.
+    store.set("ABUSEIPDB_API_KEY", "valor-super-secreto", backend="file")
     assert store.get("ABUSEIPDB_API_KEY") == "valor-super-secreto"
     # list() nunca expõe o valor
     for row in store.list():
@@ -74,7 +75,7 @@ def test_secret_store_roundtrip_and_redaction(tmp_path) -> None:
 
 def test_environment_precedence_over_file(tmp_path, monkeypatch) -> None:
     store = SecretStore(keys_path=tmp_path / "keys.json")
-    store.set("ABUSEIPDB_API_KEY", "do-arquivo")
+    store.set("ABUSEIPDB_API_KEY", "do-arquivo", backend="file")
     monkeypatch.setenv("ABUSEIPDB_API_KEY", "do-ambiente")
     assert store.get("ABUSEIPDB_API_KEY") == "do-ambiente"
 

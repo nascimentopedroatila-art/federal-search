@@ -116,15 +116,19 @@ def test_phone_plugin_invalid_number(manager: PluginManager) -> None:
 
 
 def test_key_required_plugins_report_not_configured(manager: PluginManager) -> None:
-    """Sem chaves de ambiente, plugins com requires_api_key respondem NOT CONFIGURED."""
-    import os
+    """Sem chaves disponíveis (store vazio), plugins com requires_api_key
+    respondem NOT CONFIGURED — independente de env/credenciais da máquina."""
+
+    class _EmptyStore:
+        """Store determinístico que nunca possui chaves."""
+
+        def has(self, key: str) -> bool:
+            return False
 
     keyed = [p for p in manager.all() if p.requires_api_key]
+    assert keyed, "deve haver plugins que exigem chave"
     for plugin in keyed:
-        for env_key in list(os.environ):
-            if env_key.endswith("_API_KEY") or env_key.endswith("_API_ID") or env_key.endswith("_API_SECRET"):
-                os.environ.pop(env_key, None)
-        assert plugin.check_api_key({}) is False
+        assert plugin.check_api_key({"secret_store": _EmptyStore()}) is False
 
 
 @pytest.mark.parametrize(

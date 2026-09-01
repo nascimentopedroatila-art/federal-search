@@ -202,7 +202,9 @@ def test_keys_set_delete_flow(tmp_path, capsys, monkeypatch) -> None:
     store = SecretStore(keys_path=tmp_path / "keys.json")
     # Substitui o singleton global para não tocar em config/api_keys.json real.
     monkeypatch.setattr("core.secret_store._SECRET_STORE", store)
-    code = run_cli(["keys", "set", "ABUSEIPDB_API_KEY", "--value", "chave-teste"])
+    # backend=file: o teste não pode gravar credenciais reais no Credential
+    # Manager do Windows (determinístico em todas as plataformas).
+    code = run_cli(["keys", "set", "ABUSEIPDB_API_KEY", "--value", "chave-teste", "--backend", "file"])
     assert code == 0
     assert store.get("ABUSEIPDB_API_KEY") == "chave-teste"
     code = run_cli(["keys", "delete", "ABUSEIPDB_API_KEY"])

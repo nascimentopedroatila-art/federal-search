@@ -62,45 +62,12 @@ class SecretStore:
     # ------------------------------------------------------------------ #
     # Windows Credential Manager (DPAPI)
     # ------------------------------------------------------------------ #
-    def _win_get(self, key: str) -> str | None:
-        try:
-            import ctypes
-
-            class CREDENTIAL(ctypes.Structure):
-                _fields_ = [
-                    ("Flags", ctypes.c_ulong),
-                    ("Type", ctypes.c_ulong),
-                    ("TargetName", ctypes.c_wchar_p),
-                    ("Comment", ctypes.c_wchar_p),
-                    ("LastWritten", ctypes.c_longlong),
-                    ("CredentialBlobSize", ctypes.c_ulong),
-                    ("CredentialBlob", ctypes.POINTER(ctypes.c_ubyte)),
-                    ("Persist", ctypes.c_ulong),
-                    ("AttributeCount", ctypes.c_ulong),
-                    ("Attributes", ctypes.c_void_p),
-                    ("TargetAlias", ctypes.c_wchar_p),
-                    ("UserName", ctypes.c_wchar_p),
-                ]
-
-            target = f"NEXUS:{key}"
-            cred = ctypes.POINTER(CREDENTIAL)()
-            advapi32 = ctypes.windll.advapi32
-            ok = advapi32.CredReadW(target, 1, 0, ctypes.byref(cred))
-            if ok:
-                try:
-                    blob = ctypes.string_at(cred.contents.CredentialBlob, cred.contents.CredentialBlobSize)
-                    return blob.decode("utf-16-le") if blob else None
-                finally:
-                    advapi32.CredFree(cred)
-            return None
-        except Exception:  # noqa: BLE001 - fallback silencioso
-            return None
-
-    def _win_set(self, key: str, value: str) -> None:
+    @staticmethod
+    def _win_advapi32():
+        """Carrega advapi32 com assinaturas corretas (evita erros de ctypes)."""
         import ctypes
 
-        target = f"NEXUS:{key}"
-        blob = value.encode("utf-16-le")
+        advapi32 = ctypes.windll.advapi32
 
         class CREDENTIAL(ctypes.Structure):
             _fields_ = [
@@ -118,6 +85,42 @@ class SecretStore:
                 ("UserName", ctypes.c_wchar_p),
             ]
 
+        advapi32.CredReadW.argtypes = [
+            ctypes.c_wchar_p, ctypes.c_ulong, ctypes.c_ulong,
+            ctypes.POINTER(ctypes.POINTER(CREDENTIAL)),
+        ]
+        advapi32.CredReadW.restype = ctypes.c_int
+        advapi32.CredWriteW.argtypes = [ctypes.POINTER(CREDENTIAL), ctypes.c_ulong]
+        advapi32.CredWriteW.restype = ctypes.c_int
+        advapi32.CredDeleteW.argtypes = [ctypes.c_wchar_p, ctypes.c_ulong, ctypes.c_ulong]
+        advapi32.CredDeleteW.restype = ctypes.c_int
+        advapi32.CredFree.argtypes = [ctypes.c_void_p]
+        advapi32.CredFree.restype = None
+        return advapi32, CREDENTIAL
+
+    def _win_get(self, key: str) -> str | None:
+        try:
+            import ctypes
+
+            advapi32, CREDENTIAL = self._win_advapi32()
+            target = f"NEXUS:{key}"
+            cred = ctypes.POINTER(CREDENTIAL)()
+            if advapi32.CredReadW(target, 1, 0, ctypes.byref(cred)):
+                try:
+                    blob = ctypes.string_at(cred.contents.CredentialBlob, cred.contents.CredentialBlobSize)
+                    return blob.decode("utf-16-le") if blob else None
+                finally:
+                    advapi32.CredFree(cred)
+            return None
+        except Exception:  # noqa: BLE001 - fallback silencioso
+            return None
+
+    def _win_set(self, key: str, value: str) -> None:
+        import ctypes
+
+        advapi32, CREDENTIAL = self._win_advapi32()
+        target = f"NEXUS:{key}"
+        blob = value.encode("utf-16-le")
         buf = ctypes.create_string_buffer(blob)
         cred = CREDENTIAL(
             0,
@@ -133,15 +136,13 @@ class SecretStore:
             None,
             None,
         )
-        advapi32 = ctypes.windll.advapi32
         if not advapi32.CredWriteW(ctypes.byref(cred), 0):
             raise ApiKeyError(f"Não foi possível gravar {key} no Credential Manager")
 
     def _win_delete(self, key: str) -> None:
         try:
-            import ctypes
-
-            ctypes.windll.advapi32.CredDeleteW(f"NEXUS:{key}", 1, 0)
+            advapi32, _ = self._win_advapi32()
+            advapi32.CredDeleteW(f"NEXUS:{key}", 1, 0)
         except Exception:  # noqa: BLE001
             pass
 
