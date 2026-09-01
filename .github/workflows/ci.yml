@@ -26,7 +26,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
       - name: Run tests
-        run: pytest -v
+        run: pytest -v --junitxml=junit.xml
+      - name: Upload junit on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-${{ matrix.os }}-${{ matrix.python-version }}
+          path: junit.xml
 
   lint:
     name: Lint (ruff)
