@@ -57,6 +57,36 @@ class MeuPlugin(NexusPlugin):
 | `rate_limit` | `float` | req/s máximo do plugin |
 | `timeout` | `float` | limite de execução em segundos |
 
+## Plugins com API key (V2)
+
+Plugins que exigem chave declaram `requires_api_key = "<NOME_DA_CHAVE>"`. Sem a
+chave configurada, a engine os marca como `NOT_CONFIGURED` e o plugin deve
+retornar um `PluginResult` com `status="NOT_CONFIGURED"`:
+
+```python
+from core.constants import Status
+
+class MeuPluginComChave(NexusPlugin):
+    requires_api_key = "MINHA_CHAVE"   # precisa estar em SUPPORTED_KEYS
+
+    async def execute(self, target, context=None):
+        store = (context or {}).get("secret_store")
+        api_key = store.get("MINHA_CHAVE") if store else None
+        if not api_key:
+            return [PluginResult(
+                result_type="info",
+                data={"message": "NOT CONFIGURED"},
+                source="minha-api",
+                confidence="LOW",
+                status=Status.NOT_CONFIGURED.value,
+            )]
+        # ... consulta real com api_key
+```
+
+Exemplos na V2: `Safe Browsing URL Check`, `IPQualityScore URL Scan`,
+`VirusTotal IP/Domain`, `SecurityTrails Subdomains`, `Hunter Domain Search`,
+`EmailRep.io IP`.
+
 ## Boas práticas
 
 1. **Nunca levante exceções** para fora do `execute` — retorne

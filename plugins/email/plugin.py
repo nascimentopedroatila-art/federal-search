@@ -163,3 +163,64 @@ def _disposition_hint(domain: str) -> str:
         if domain == hint_domain or domain.endswith(f".{hint_domain}"):
             return hint
     return "domínio próprio/corporativo"
+
+
+class EmailRepIpPlugin(NexusPlugin):
+    """Reputação de um IP no contexto de e-mail via emailrep.io."""
+
+    name = "EmailRep.io IP"
+    version = "2.0"
+    description = "Reputação de IP no contexto de e-mail via emailrep.io (requer chave)."
+    author = "NEXUS Project"
+    target_types = ["ip"]
+    requires_api_key = "EMAILREP_API_KEY"
+    rate_limit = 1.0
+    timeout = 15.0
+
+    async def execute(self, target: str, context: dict[str, Any] | None = None) -> list[PluginResult]:
+        store = (context or {}).get("secret_store")
+        api_key = store.get("EMAILREP_API_KEY") if store else None
+        if not api_key:
+            return [
+                PluginResult(
+                    result_type="reputation",
+                    data={
+                        "ip": target,
+                        "message": "NOT CONFIGURED — defina EMAILREP_API_KEY",
+                    },
+                    source="emailrep.io",
+                    confidence="LOW",
+                    status=Status.NOT_CONFIGURED.value,
+                )
+            ]
+
+        async with make_client(timeout=12.0) as client:
+            status_code, payload, error = await safe_get(
+                client, f"https://emailrep.io/{target}", headers={"Key": api_key, "User-Agent": "nexus/2.0"}
+            )
+
+        if status_code != 200 or not isinstance(payload, dict):
+            return [
+                PluginResult(
+                    result_type="reputation",
+                    data={"ip": target, "error": error or f"HTTP {status_code}"},
+                    source="emailrep.io",
+                    confidence="LOW",
+                    status=Status.ERROR.value,
+                )
+            ]
+
+        return [
+            PluginResult(
+                result_type="reputation",
+                data={
+                    "ip": target,
+                    "reputation": payload.get("reputation"),
+                    "suspicious": payload.get("suspicious"),
+                    "references": payload.get("references"),
+                    "details": payload.get("details"),
+                },
+                source="emailrep.io",
+                confidence="MEDIUM",
+            )
+        ]

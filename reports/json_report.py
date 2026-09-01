@@ -14,7 +14,7 @@ class JsonReport(ReportGenerator):
 
     def render_text(self, scan: dict[str, Any]) -> str:
         payload = {
-            "nexus_version": "1.0.0",
+            "nexus_version": "2.0.0",
             "report_format": "json",
             "scan": scan,
         }

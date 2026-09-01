@@ -65,12 +65,24 @@ def _cmd_scan_impl(args: Any, run_async) -> int:
     from core.engine import Engine
 
     plugin_filter = [p.strip() for p in args.plugins.split(",") if p.strip()] if args.plugins else None
+    context: dict[str, Any] = {"save_to_database": not args.no_db}
+
+    targets = (
+        [t.strip() for t in getattr(args, "targets", None).split(",") if t.strip()]
+        if getattr(args, "targets", None)
+        else None
+    )
+    if targets:
+        return _cmd_scan_multi(args, run_async, targets, plugin_filter, context)
+
+    if not args.target:
+        print("[nexus] Informe --target <alvo> ou --targets <alvo1,alvo2>")
+        return 2
 
     engine = Engine(
         max_concurrent=args.max_concurrent,
         timeout=args.timeout,
     )
-    context: dict[str, Any] = {"save_to_database": not args.no_db}
     result = run_async(
         engine.run_scan(
             args.target,
@@ -130,6 +142,55 @@ def _cmd_scan_impl(args: Any, run_async) -> int:
         print()
 
     return 0
+
+
+def _cmd_scan_multi(args: Any, run_async, targets: list[str], plugin_filter, context: dict[str, Any]) -> int:
+    """Executa o scan de múltiplos alvos (em paralelo, com limite)."""
+    from cli.output import banner, colorize, print_json, render_table
+    from core.engine import Engine
+
+    engine = Engine(max_concurrent=args.max_concurrent, timeout=args.timeout)
+    results = _run_multi(engine, targets, args.target_type, plugin_filter, context)
+
+    if args.json:
+        print_json([r.to_dict() for r in results])
+        return 0
+
+    print(banner())
+    print()
+    print(colorize(f"Scan múltiplo — {len(results)} alvo(s)", "bold"))
+    print()
+    rows = []
+    for result in results:
+        status = result.status_summary()
+        rows.append(
+            (
+                result.target,
+                result.target_type,
+                result.scan_id,
+                status,
+                len(result.plugin_results),
+                len(result.errors),
+                f"{result.duration}s",
+            )
+        )
+    print(render_table(["Target", "Type", "Scan ID", "Status", "Results", "Errors", "Duration"], rows))
+    print()
+    return 0
+
+
+def _run_multi(engine, targets: list[str], target_type, plugin_filter, context: dict[str, Any]) -> list:
+    from core.engine import run_multi_scan
+
+    # run_multi_scan é bloqueante (asyncio.run interno) — não usar run_async.
+    return run_multi_scan(
+        targets,
+        target_type=target_type,
+        plugin_names=plugin_filter,
+        max_concurrent=3,
+        engine=engine,
+        context=context,
+    )
 
 
 def _compact_data(data: dict[str, Any]) -> str:

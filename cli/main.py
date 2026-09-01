@@ -33,8 +33,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", metavar="{scan,menu,plugins,apis,history,export,keys,config,diag,selfcheck}")
 
     # scan
-    p_scan = sub.add_parser("scan", help="Executa um scan contra um alvo")
-    p_scan.add_argument("--target", "-t", required=True, help="Alvo (domínio, IP, e-mail, telefone, username, URL, hash)")
+    p_scan = sub.add_parser("scan", help="Executa um scan contra um alvo (ou vários com --targets)")
+    p_scan.add_argument("--target", "-t", default=None, help="Alvo (domínio, IP, e-mail, telefone, username, URL, hash)")
+    p_scan.add_argument("--targets", default=None, help="Lista de alvos separada por vírgula (scan múltiplo)")
     p_scan.add_argument("--type", dest="target_type", default=None, help="Tipo do alvo (phone, email, username, domain, ip, url, hash)")
     p_scan.add_argument("--plugins", default=None, help="Lista de plugins separada por vírgula (filtro)")
     p_scan.add_argument("--json", action="store_true", help="Saída em JSON puro (sem tabela)")

@@ -262,7 +262,7 @@ def _timeline_section(scan: dict[str, Any]) -> str:
 
 def _footer() -> str:
     return (
-        "</main><footer>Gerado por NEXUS - Modular Intelligence Toolkit v1.0.0 "
+        "</main><footer>Gerado por NEXUS - Modular Intelligence Toolkit v2.0.0 "
         "&middot; Use somente para fins legítimos e autorizados.</footer>"
     )
 

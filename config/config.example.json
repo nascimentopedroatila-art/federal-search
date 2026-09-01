@@ -1,7 +1,7 @@
 {
   "//": "NEXUS - config.example.json",
   "//2": "Copie para config/config.json (ou execute o NEXUS uma vez; ele cria o arquivo).",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "performance_preset": "BALANCED",
   "max_concurrent_requests": 5,
   "request_timeout": 15.0,

@@ -316,6 +316,27 @@ async def run_scan_async(
     return await engine.run_scan(target, target_type, plugin_names, context=kwargs.get("context"))
 
 
+async def run_multi_scan_async(
+    targets: list[str],
+    target_type: str | None = None,
+    plugin_names: list[str] | None = None,
+    max_concurrent: int = 4,
+    engine: "Engine | None" = None,
+    **kwargs: Any,
+) -> list[ScanResult]:
+    """Executa scans em paralelo para múltiplos alvos (limite de concorrência)."""
+    semaphore = asyncio.Semaphore(max(int(max_concurrent), 1))
+    engine = engine or Engine()
+
+    async def _one(target: str) -> ScanResult:
+        async with semaphore:
+            return await engine.run_scan(
+                target, target_type, plugin_names, context=kwargs.get("context")
+            )
+
+    return list(await asyncio.gather(*(_one(t) for t in targets)))
+
+
 def run_scan(
     target: str,
     target_type: str | None = None,
@@ -324,3 +345,19 @@ def run_scan(
 ) -> ScanResult:
     """Executa um scan (bloqueante) com o event loop padrão."""
     return asyncio.run(run_scan_async(target, target_type, plugin_names, **kwargs))
+
+
+def run_multi_scan(
+    targets: list[str],
+    target_type: str | None = None,
+    plugin_names: list[str] | None = None,
+    max_concurrent: int = 4,
+    engine: "Engine | None" = None,
+    **kwargs: Any,
+) -> list[ScanResult]:
+    """Executa scans em paralelo para múltiplos alvos (bloqueante)."""
+    return asyncio.run(
+        run_multi_scan_async(
+            targets, target_type, plugin_names, max_concurrent, engine=engine, **kwargs
+        )
+    )

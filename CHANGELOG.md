@@ -5,6 +5,29 @@ Todas as mudanças relevantes do NEXUS são documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.0.0] — 2026-09-01
+
+### Adicionado (V2 — mais APIs + scan múltiplo)
+
+- **8 novos plugins** (total: 16), todos com fontes reais e documentadas:
+  - `Safe Browsing URL Check` (Google Safe Browsing v4 — `threatMatches:find`);
+  - `IPQualityScore URL Scan` (URL Scanner API);
+  - `IPQualityScore IP` (IP Scoring API);
+  - `VirusTotal IP` (API v3 `ip_addresses/{ip}`);
+  - `VirusTotal Domain` (API v3 `domains/{domain}`);
+  - `SecurityTrails Subdomains` (API v1 `domain/{domain}/subdomains`);
+  - `Hunter Domain Search` (API v2 `domain-search`);
+  - `EmailRep.io IP` (reputação de IP no contexto de e-mail).
+- **Scan múltiplo**: `python nexus.py scan --targets alvo1,alvo2,alvo3` — executa
+  scans em paralelo com limite de concorrência (`core/engine.run_multi_scan`).
+- Suporte a alvos do tipo `url` na engine e no Target Detector/CLI.
+- Novos testes para os plugins V2 (NOT CONFIGURED sem chave), scan múltiplo e CLI.
+
+### Melhorias
+
+- Listagem de plugins/APIs reflete as 16 integrações.
+- Documentação atualizada (README, ARCHITECTURE, PLUGINS, USAGE).
+
 ## [1.0.0] — 2026-09-01
 
 ### Adicionado

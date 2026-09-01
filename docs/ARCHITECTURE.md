@@ -98,10 +98,16 @@ Logs redigem `api_key=...`, `token=...`, `Bearer ...`.
 SQLite (stdlib). Tabelas: `scans`, `scan_results`, `schema_version`.
 Migrações idempotentes em `database/migrations.py`.
 
+## Scan múltiplo (V2)
+
+`core/engine.run_multi_scan_async` executa scans de vários alvos em paralelo
+com um `asyncio.Semaphore` (padrão 4, ajustável). Cada alvo gera um
+`ScanResult` independente; os resultados são salvos no banco individualmente.
+
 ## Roadmap
 
 - **V1** — core + primeiros plugins ✅
-- **V2** — mais APIs (via plugins, sem tocar no núcleo)
+- **V2** — mais APIs (8 novos plugins, 16 no total) + scan múltiplo ✅
 - **V3** — correlação de resultados entre plugins
 - **V4** — dashboard web
 - **V5** — marketplace/ecossistema de plugins

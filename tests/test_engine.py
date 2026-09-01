@@ -141,3 +141,20 @@ def test_scan_result_to_dict_is_serializable() -> None:
     assert payload["scan_id"] == result.scan_id
     assert isinstance(payload["results"], list)
     assert "plugins" in payload
+
+
+def test_multi_scan_runs_all_targets() -> None:
+    from core.engine import run_multi_scan_async
+
+    engine = _make_engine([OkPlugin])
+    results = asyncio.run(
+        run_multi_scan_async(
+            ["example.com", "example.org"],
+            engine=engine,
+            context={"save_to_database": False},
+        )
+    )
+    assert len(results) == 2
+    assert {r.target for r in results} == {"example.com", "example.org"}
+    for result in results:
+        assert result.plugin_status["Test Ok Plugin"] == Status.SUCCESS.value

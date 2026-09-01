@@ -44,6 +44,21 @@ def test_scan_forced_type() -> None:
     assert code == 0
 
 
+def test_scan_multi_targets(capsys) -> None:
+    """V2: scan múltiplo com --targets executa todos os alvos."""
+    code = run_cli(["scan", "--targets", "+5585999999999,8.8.8.8", "--no-db"])
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "Scan múltiplo" in output
+    assert "+5585999999999" in output
+    assert "8.8.8.8" in output
+
+
+def test_scan_requires_target_or_targets() -> None:
+    code = run_cli(["scan", "--no-db"])
+    assert code == 2
+
+
 def test_scan_unknown_target_fails_gracefully() -> None:
     code = run_cli(["scan", "--target", "!!!", "--no-db"])
     assert code == 1

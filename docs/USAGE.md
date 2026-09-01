@@ -22,12 +22,24 @@ O tipo é detectado automaticamente:
 
 | Opção | Descrição |
 |---|---|
+| `--target <alvo>` | alvo único |
+| `--targets <a,b,c>` | scan múltiplo (V2): vários alvos em paralelo |
 | `--type <tipo>` | força o tipo (`phone`, `email`, `username`, `domain`, `ip`, `url`, `hash`) — sempre respeitado |
 | `--plugins <a,b>` | executa apenas os plugins listados |
 | `--json` | saída JSON pura (sem tabela nem logs no stdout) |
 | `--no-db` | não grava o scan no banco |
 | `--max-concurrent N` | override da concorrência |
 | `--timeout N` | override do timeout de requisição (segundos) |
+
+### Scan múltiplo
+
+```bash
+python nexus.py scan --targets "+5585999999999,8.8.8.8,user@example.com"
+python nexus.py scan --targets "example.com,example.org" --json
+```
+
+Cada alvo é processado em paralelo (limite de concorrência) e gerado como um
+`ScanResult` independente, com histórico e exportação individuais.
 
 ## Menu interativo
 

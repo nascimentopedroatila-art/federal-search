@@ -13,7 +13,7 @@ from typing import Any
 import httpx
 
 USER_AGENT = (
-    "Mozilla/5.0 (compatible; NEXUS/1.0 Modular Intelligence Toolkit; "
+    "Mozilla/5.0 (compatible; NEXUS/2.0 Modular Intelligence Toolkit; "
     "+https://github.com/nascimentopedroatila-art/federal-search)"
 )
 

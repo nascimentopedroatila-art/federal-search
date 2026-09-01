@@ -4,7 +4,9 @@
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Platforms](https://img.shields.io/badge/Windows%2011-Linux-macOS-Termux-0078D6?logo=windows)](https://github.com/nascimentopedroatila-art/federal-search)
 [![License](https://img.shields.io/github/license/nascimentopedroatila-art/federal-search)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-130%2B%20passing-brightgreen)](https://github.com/nascimentopedroatila-art/federal-search/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/tests-140%2B%20passing-brightgreen)](https://github.com/nascimentopedroatila-art/federal-search/actions/workflows/ci.yml)
+[![Plugins](https://img.shields.io/badge/plugins-16-orange)](docs/PLUGINS.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 > **OSINT legítimo • Análise de infraestrutura pública • Diagnóstico de rede • Automação de consultas a APIs autorizadas**
@@ -30,6 +32,7 @@ O NEXUS **não** implementa (e nunca implementará): invasão de contas, quebra 
 ## ✨ Características
 
 - **CLI profissional** — comando direto (`python nexus.py scan --target example.com`) **e** menu interativo (`python nexus.py menu`);
+- **Scan múltiplo** — vários alvos em paralelo com `python nexus.py scan --targets alvo1,alvo2,alvo3`;
 - **Detector automático de alvos** — telefone, e-mail, domínio, IP, URL, username e hash; tipo manual respeitado com `--type`;
 - **Sistema de plugins** — plugins descobertos automaticamente em `plugins/`, sem alterar o núcleo;
 - **Engine assíncrona** — `asyncio` + `httpx`, semáforos, rate limiting, timeouts, retry com *exponential backoff*, cache;
@@ -105,6 +108,10 @@ python nexus.py scan --target 8.8.8.8
 python nexus.py scan --target user@example.com
 python nexus.py scan --target +5585999999999
 python nexus.py scan --target d41d8cd98f00b204e9800998ecf8427e
+python nexus.py scan --target https://example.com
+
+# Scan múltiplo (V2): vários alvos em paralelo
+python nexus.py scan --targets "+5585999999999,8.8.8.8,user@example.com"
 
 # Tipo manual (sempre respeitado)
 python nexus.py scan --target "exemplo de username" --type username
@@ -191,18 +198,33 @@ class MeuPlugin(NexusPlugin):
 
 **Adicionar um plugin não exige nenhuma alteração no núcleo.** Basta criar a pasta e rodar `python nexus.py plugins`. Veja [docs/PLUGINS.md](docs/PLUGINS.md).
 
-### Plugins incluídos na V1
+### Plugins incluídos (16 na V2)
+
+**Sem chave de API:**
 
 | Plugin | Tipos | Descrição |
 |---|---|---|
 | Phone Validator | phone | validação, país, região, operadora, tipo de linha (offline) |
-| Email Analyzer | email | formato, domínio, MX, DNS, SPF/DMARC, reputação (emailrep.io) |
 | Username Presence | username | presença pública (GitHub, GitLab, X, Reddit, Instagram, Telegram, Mastodon) |
 | Domain Intelligence | domain | DNS completo, WHOIS (RDAP), certificados (crt.sh), tecnologias, subdomínios |
-| IP Intelligence | ip | geo (ipwho.is), ASN, DNS reverso, RDAP, reputação (AbuseIPDB) |
 | DNS Records | domain | A, AAAA, MX, NS, TXT, CNAME, SOA, CAA |
-| Hash Analyzer | hash | identificação MD5/SHA1/SHA256/SHA512, CIRCL hashlookup, VirusTotal |
 | Network Diagnostics | todos | diagnóstico local e conectividade TCP básica |
+
+**Com API key (opcional — respondem `NOT CONFIGURED` sem chave):**
+
+| Plugin | Tipos | Fonte |
+|---|---|---|
+| Email Analyzer | email | formato, MX, DNS, SPF/DMARC + emailrep.io |
+| IP Intelligence | ip | ipwho.is, RDAP, DNS reverso + AbuseIPDB |
+| Hash Analyzer | hash | identificação + CIRCL hashlookup + VirusTotal |
+| Safe Browsing URL Check | url | Google Safe Browsing v4 |
+| IPQualityScore URL Scan | url | IPQualityScore URL Scanner |
+| IPQualityScore IP | ip | IPQualityScore IP Scoring |
+| VirusTotal IP | ip | VirusTotal v3 |
+| VirusTotal Domain | domain | VirusTotal v3 |
+| SecurityTrails Subdomains | domain | SecurityTrails v1 |
+| Hunter Domain Search | domain | Hunter.io v2 |
+| EmailRep.io IP | ip | emailrep.io |
 
 ---
 
@@ -309,7 +331,7 @@ nexus/
 
 **Regra de ouro:** o núcleo não depende de nenhuma API específica. Novas integrações são sempre plugins.
 
-Roadmap: V1 core + primeiros plugins → V2 mais APIs → V3 correlação de resultados → V4 dashboard web → V5 marketplace de plugins.
+Roadmap: V1 core + primeiros plugins ✅ → V2 mais APIs + scan múltiplo ✅ → V3 correlação de resultados → V4 dashboard web → V5 marketplace de plugins.
 
 ---
 
@@ -321,7 +343,7 @@ pytest -v          # suíte completa (offline, com mocks)
 ruff check .       # lint
 ```
 
-A suíte cobre: detector de alvos, normalização, plugins, API manager, rate limiter, cache, deduplicação, banco, exportação, CLI, engine e tratamento de erros.
+A suíte cobre: detector de alvos, normalização, plugins, API manager, rate limiter, cache, deduplicação, banco, exportação, CLI (incluindo scan múltiplo), engine e tratamento de erros.
 
 ---
 

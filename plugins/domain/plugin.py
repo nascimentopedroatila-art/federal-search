@@ -286,3 +286,212 @@ def _infer_technologies(dns_data: dict[str, Any]) -> list[dict[str, str]]:
     if zoho_mx:
         techs.append({"tech": "Zoho Mail (inferido de MX)", "evidence": str(mx[0]), "type": "MX"})
     return techs
+
+
+class SecurityTrailsSubdomainsPlugin(NexusPlugin):
+    """Enumeração de subdomínios via SecurityTrails (API oficial)."""
+
+    name = "SecurityTrails Subdomains"
+    version = "2.0"
+    description = "Subdomínios de um domínio via SecurityTrails (requer chave)."
+    author = "NEXUS Project"
+    target_types = ["domain"]
+    requires_api_key = "SECURITYTRAILS_API_KEY"
+    rate_limit = 1.0
+    timeout = 15.0
+
+    async def execute(self, target: str, context: dict[str, Any] | None = None) -> list[PluginResult]:
+        store = (context or {}).get("secret_store")
+        api_key = store.get("SECURITYTRAILS_API_KEY") if store else None
+        if not api_key:
+            return [
+                PluginResult(
+                    result_type="subdomain",
+                    data={
+                        "domain": target,
+                        "message": "NOT CONFIGURED — defina SECURITYTRAILS_API_KEY",
+                    },
+                    source="SecurityTrails",
+                    confidence="LOW",
+                    status=Status.NOT_CONFIGURED.value,
+                )
+            ]
+
+        headers = {"APIKEY": api_key, "Accept": "application/json"}
+        async with make_client(timeout=12.0) as client:
+            status_code, payload, error = await safe_get(
+                client, f"https://api.securitytrails.com/v1/domain/{target}/subdomains", headers=headers
+            )
+
+        if status_code != 200 or not isinstance(payload, dict):
+            return [
+                PluginResult(
+                    result_type="subdomain",
+                    data={"domain": target, "error": error or f"HTTP {status_code}"},
+                    source="SecurityTrails",
+                    confidence="LOW",
+                    status=Status.ERROR.value,
+                )
+            ]
+
+        subdomains = sorted(
+            {f"{s}.{target}" for s in (payload.get("subdomains") or []) if isinstance(s, str)}
+        )
+        if not subdomains:
+            return [
+                PluginResult(
+                    result_type="subdomain",
+                    data={"domain": target, "subdomains": [], "count": 0},
+                    source="SecurityTrails",
+                    confidence="LOW",
+                    status=Status.NO_RESULTS.value,
+                )
+            ]
+        return [
+            PluginResult(
+                result_type="subdomain",
+                data={"domain": target, "subdomains": subdomains[:200], "count": len(subdomains)},
+                source="SecurityTrails",
+                confidence="HIGH",
+            )
+        ]
+
+
+class VirusTotalDomainPlugin(NexusPlugin):
+    """Reputação de domínio via VirusTotal v3 (API oficial, requer chave)."""
+
+    name = "VirusTotal Domain"
+    version = "2.0"
+    description = "Detecções e dados públicos de um domínio via VirusTotal v3."
+    author = "NEXUS Project"
+    target_types = ["domain"]
+    requires_api_key = "VIRUSTOTAL_API_KEY"
+    rate_limit = 4.0
+    timeout = 15.0
+
+    async def execute(self, target: str, context: dict[str, Any] | None = None) -> list[PluginResult]:
+        store = (context or {}).get("secret_store")
+        api_key = store.get("VIRUSTOTAL_API_KEY") if store else None
+        if not api_key:
+            return [
+                PluginResult(
+                    result_type="reputation",
+                    data={
+                        "domain": target,
+                        "message": "NOT CONFIGURED — defina VIRUSTOTAL_API_KEY",
+                    },
+                    source="VirusTotal",
+                    confidence="LOW",
+                    status=Status.NOT_CONFIGURED.value,
+                )
+            ]
+
+        headers = {"x-apikey": api_key}
+        async with make_client(timeout=15.0) as client:
+            status_code, payload, error = await safe_get(
+                client, f"https://www.virustotal.com/api/v3/domains/{target}", headers=headers
+            )
+
+        if status_code != 200 or not isinstance(payload, dict):
+            return [
+                PluginResult(
+                    result_type="reputation",
+                    data={"domain": target, "error": error or f"HTTP {status_code}"},
+                    source="VirusTotal",
+                    confidence="LOW",
+                    status=Status.ERROR.value,
+                )
+            ]
+
+        attributes = (payload.get("data") or {}).get("attributes") or {}
+        stats = attributes.get("last_analysis_stats") or {}
+        return [
+            PluginResult(
+                result_type="reputation",
+                data={
+                    "domain": target,
+                    "detection_ratio": f"{stats.get('malicious', 0)}/{sum(stats.values()) if stats else 0}",
+                    "stats": stats,
+                    "registrar": attributes.get("registrar"),
+                    "creation_date": attributes.get("creation_date"),
+                    "last_dns_records": attributes.get("last_dns_records") or [],
+                    "categories": attributes.get("categories") or {},
+                },
+                source="VirusTotal",
+                confidence="HIGH",
+            )
+        ]
+
+
+class HunterDomainPlugin(NexusPlugin):
+    """Busca de e-mails associados publicamente a um domínio via Hunter.io."""
+
+    name = "Hunter Domain Search"
+    version = "2.0"
+    description = "E-mails públicos associados a um domínio via Hunter.io (requer chave)."
+    author = "NEXUS Project"
+    target_types = ["domain"]
+    requires_api_key = "HUNTER_API_KEY"
+    rate_limit = 1.0
+    timeout = 15.0
+
+    async def execute(self, target: str, context: dict[str, Any] | None = None) -> list[PluginResult]:
+        store = (context or {}).get("secret_store")
+        api_key = store.get("HUNTER_API_KEY") if store else None
+        if not api_key:
+            return [
+                PluginResult(
+                    result_type="reference",
+                    data={
+                        "domain": target,
+                        "message": "NOT CONFIGURED — defina HUNTER_API_KEY",
+                    },
+                    source="Hunter.io",
+                    confidence="LOW",
+                    status=Status.NOT_CONFIGURED.value,
+                )
+            ]
+
+        async with make_client(timeout=15.0) as client:
+            status_code, payload, error = await safe_get(
+                client,
+                "https://api.hunter.io/v2/domain-search",
+                params={"domain": target, "api_key": api_key},
+            )
+
+        if status_code != 200 or not isinstance(payload, dict):
+            return [
+                PluginResult(
+                    result_type="reference",
+                    data={"domain": target, "error": error or f"HTTP {status_code}"},
+                    source="Hunter.io",
+                    confidence="LOW",
+                    status=Status.ERROR.value,
+                )
+            ]
+
+        data = payload.get("data") or {}
+        emails = [
+            {
+                "value": e.get("value"),
+                "type": e.get("type"),
+                "confidence": e.get("confidence"),
+                "sources": [s.get("domain") for s in (e.get("sources") or [])][:5],
+            }
+            for e in (data.get("emails") or [])
+            if isinstance(e, dict) and e.get("value")
+        ]
+        return [
+            PluginResult(
+                result_type="reference",
+                data={
+                    "domain": target,
+                    "emails": emails[:100],
+                    "count": len(emails),
+                    "pattern": data.get("pattern"),
+                    "organization": (data.get("organization") or {}).get("name"),
+                },
+                source="Hunter.io",
+                confidence="HIGH",
+            )
+        ]

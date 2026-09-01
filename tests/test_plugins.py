@@ -26,9 +26,19 @@ def test_discovery_finds_all_core_plugins(manager: PluginManager) -> None:
         "DNS Records",
         "Hash Analyzer",
         "Network Diagnostics",
+        # V2
+        "Safe Browsing URL Check",
+        "IPQualityScore URL Scan",
+        "IPQualityScore IP",
+        "VirusTotal IP",
+        "VirusTotal Domain",
+        "SecurityTrails Subdomains",
+        "Hunter Domain Search",
+        "EmailRep.io IP",
     }
     missing = expected - names
     assert not missing, f"plugins ausentes: {missing}"
+    assert len(names) >= 16
 
 
 def test_plugin_metadata_is_complete(manager: PluginManager) -> None:
@@ -111,6 +121,41 @@ def test_key_required_plugins_report_not_configured(manager: PluginManager) -> N
 
     keyed = [p for p in manager.all() if p.requires_api_key]
     for plugin in keyed:
-        for env_key in ("EMAILREP_API_KEY", "ABUSEIPDB_API_KEY", "VIRUSTOTAL_API_KEY"):
-            os.environ.pop(env_key, None)
+        for env_key in list(os.environ):
+            if env_key.endswith("_API_KEY") or env_key.endswith("_API_ID") or env_key.endswith("_API_SECRET"):
+                os.environ.pop(env_key, None)
         assert plugin.check_api_key({}) is False
+
+
+@pytest.mark.parametrize(
+    ("plugin_name", "target"),
+    [
+        ("Safe Browsing URL Check", "https://example.com"),
+        ("IPQualityScore URL Scan", "https://example.com"),
+        ("IPQualityScore IP", "8.8.8.8"),
+        ("VirusTotal IP", "8.8.8.8"),
+        ("VirusTotal Domain", "example.com"),
+        ("SecurityTrails Subdomains", "example.com"),
+        ("Hunter Domain Search", "example.com"),
+        ("EmailRep.io IP", "8.8.8.8"),
+    ],
+)
+def test_v2_keyed_plugins_return_not_configured_without_key(
+    manager: PluginManager, plugin_name: str, target: str
+) -> None:
+    """Sem chave, os plugins V2 retornam PluginResult NOT_CONFIGURED (sem exceção)."""
+    import os
+
+    for env_key in list(os.environ):
+        if env_key.endswith("_API_KEY") or env_key.endswith("_API_ID") or env_key.endswith("_API_SECRET"):
+            os.environ.pop(env_key, None)
+
+    plugin = manager.get(plugin_name)
+    assert plugin is not None
+
+    async def _run() -> list:
+        return await plugin.execute(target, context={})
+
+    results = asyncio.run(_run())
+    assert results
+    assert any(r.status == "NOT_CONFIGURED" for r in results)

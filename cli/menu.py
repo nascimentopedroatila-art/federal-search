@@ -85,6 +85,7 @@ def _run_scan_interactive(target_value: str, forced_type: str | None = None) -> 
 
     class _Args:
         target = target_value
+        targets = None
         target_type = forced_type
         plugins = None
         json = False
